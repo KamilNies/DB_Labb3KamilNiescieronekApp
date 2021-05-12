@@ -12,7 +12,7 @@ namespace Labb3KamilNiescieronek
         static void Main(string[] args)
         {
             string test = "playlist";
-            bool boolTest = TableOptionsPrompt(test, "-exit");
+            bool boolTest = TableOptionsPrompt(test, "-add");
             if (boolTest)
             {
                 Console.WriteLine("Normal return");
@@ -108,7 +108,7 @@ namespace Labb3KamilNiescieronek
                                 */
                             }
 
-                            return; //Maybe change later. Also need a way to return to regular loop. Or do I?
+                            return; //Maybe change later. Also need a way to return to regular loop... Or do I...
                         }
                         else
                         {
@@ -471,6 +471,11 @@ namespace Labb3KamilNiescieronek
                 case "-select":
                     break;
                 case "-add":
+                    Console.WriteLine("Loading table. Please wait...");
+                    using (var db = new Labb3KamilNiescieronekContext())
+                    {
+
+                    }
                     break;
                 case "-update":
                     break;
