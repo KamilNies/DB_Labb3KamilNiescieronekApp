@@ -1,7 +1,9 @@
 ﻿using Labb3KamilNiescieronek.Data;
 using Labb3KamilNiescieronek.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -11,17 +13,28 @@ namespace Labb3KamilNiescieronek
     {
         static void Main(string[] args)
         {
-            string test = "playlist";
-            bool boolTest = TableOptionsPrompt(test, "-add");
-            if (boolTest)
-            {
-                Console.WriteLine("Normal return");
-            }
-            else
-            {
-                Console.WriteLine("Exit return successful");
-            }
+            //Note to self change Record mentions to rows, makes it clearer
+            #region Test space
+            string testing = "artist";
+            InsertRow(testing);
             Console.ReadKey();
+            //string test = "playlists";
+            //InsertRow(test);
+            //Console.ReadKey();
+            //ReadTable(test);
+            //Console.ReadKey();
+            //string test = "playlist";
+            //bool boolTest = TableOptionsPrompt(test, "-add");
+            //if (boolTest)
+            //{
+            //    Console.WriteLine("Normal return");
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Exit return successful");
+            //}
+            //Console.ReadKey();
+            #endregion Test space
             #region Check DB
             //Check connection. Create DB if connection does not exist
             Console.WriteLine("Checking connection. Please wait...");
@@ -29,8 +42,8 @@ namespace Labb3KamilNiescieronek
             {
                 if (!context.Database.CanConnect())
                 {
-                    Console.WriteLine("No connection found.");
-                    Console.WriteLine("Creating DB Labb3KamilNiescieronek...");
+                    Console.WriteLine(new string('-', 100));
+                    Console.WriteLine("No connection found. Creating DB Labb3KamilNiescieronek. Please wait...");
                     try
                     {
                         var sql = File.ReadAllText("../../../script.sql");
@@ -51,13 +64,15 @@ namespace Labb3KamilNiescieronek
                         throw new Exception("Something went wrong: ", e); //Dont forget to catch exception later on
                     }
 
+                    Console.WriteLine(new string('-', 100));
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("\nDB Labb3KamilNiescieronek created successfully.");
+                    Console.WriteLine("DB Labb3KamilNiescieronek created successfully.");
                     Console.ResetColor();
                 }
                 else
                 {
-                    Console.WriteLine("\nConnection valid.");
+                    Console.WriteLine(new string('-', 100));
+                    Console.WriteLine("Connection valid.");
                 }
             }
             #endregion Check DB
@@ -79,12 +94,13 @@ namespace Labb3KamilNiescieronek
                     case "-select":
                         if (parameters.Length > 1)
                         {
+                            Console.WriteLine(new string('-', 100));
+                            ReadTable(parameters[1]);
+                            ShowOptions(parameters[1]);
+
                             bool secondFlag = true;
                             while (secondFlag)
                             {
-                                Console.WriteLine(new string('-', 100));
-                                ReadTable(parameters[1]);
-
                                 string[] tableOptions = Console.ReadLine()
                                     .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
                                 tableOptions = Array.ConvertAll(tableOptions, x => x.ToLower());
@@ -119,6 +135,7 @@ namespace Labb3KamilNiescieronek
                                 .Trim(new char[] { ' ', '-', '.', ',', ';', '<', '>' }).ToLower();
                             Console.WriteLine(new string('-', 100));
                             ReadTable(tableName);
+                            ShowOptions(tableName);
                             #endregion Ignore for now
                         }
                         break;
@@ -152,7 +169,7 @@ namespace Labb3KamilNiescieronek
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("Labb3KamilNiescieronek DB ");
             Console.ResetColor();
-            Console.WriteLine("| Select any of the following parameters: ");
+            Console.WriteLine("| Choose any of the following parameters: ");
             Console.WriteLine(new string('-', 100));
             Console.WriteLine("-tables");
             Console.WriteLine("-select <table name>");
@@ -169,18 +186,26 @@ namespace Labb3KamilNiescieronek
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write($"{table.Substring(0, 1).ToUpper() + table.Substring(1, table.Length - 1)} table");
             Console.ResetColor();
-            Console.WriteLine(" | Select any of the following parameters: ");
+            Console.WriteLine(" | Choose any of the following parameters: ");
             Console.WriteLine(new string('-', 100));
             Console.WriteLine("-tables");
             Console.WriteLine("-select <table name>");
             Console.WriteLine("-add");
-            Console.WriteLine("-update <PK_Id>");
-            Console.WriteLine("-delete <PK_Id>");
+            Console.WriteLine("-update");
+            Console.WriteLine("-delete");
             Console.WriteLine("-options");
             Console.WriteLine("-clear");
             Console.WriteLine("-help");
             Console.WriteLine("-exit");
             Console.WriteLine(new string('-', 100));
+        }
+        private static void TableHeader(string table)
+        {
+            Console.WriteLine(new string('-', 100));
+            Console.Write("Labb3KamilNiescieronek DB | ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"{table.Substring(0, 1).ToUpper() + table.Substring(1, table.Length - 1)} table");
+            Console.ResetColor();
         }
         private static void ReadTable(string table)
         {
@@ -205,11 +230,14 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine("Only a maximum of 25 records may be displayed at a time.");
                             Console.WriteLine(new string('-', 100));
                             Console.Write("Input the number of records you wish to display: ");
-                            RecordCount = TryParser(Console.ReadLine(), 1, 25);
+                            RecordCount = IntTryParser(Console.ReadLine(), 1, 25);
                             Console.WriteLine(new string('-', 100));
                             Console.Write($"Input the row number you wish to start at (max {albums.Count() - RecordCount + 1}): ");
-                            min = TryParser(Console.ReadLine(), 1, albums.Count() - RecordCount + 1);
+                            min = IntTryParser(Console.ReadLine(), 1, albums.Count() - RecordCount + 1);
                         }
+
+                        //Table header
+                        TableHeader(table);
 
                         //Column header
                         string columnHeader = $"{properties[0]}\t\t{properties[1]}" + new string('\t', 5) + $"{properties[2]}";
@@ -234,8 +262,6 @@ namespace Labb3KamilNiescieronek
                                     $"\t{a.ArtistId}");
                             }
                         }
-                 
-                        ShowOptions(table);
                         break;
                     case "artist":
                     case "artists":
@@ -254,11 +280,14 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine("Only a maximum of 25 records may be displayed at a time.");
                             Console.WriteLine(new string('-', 100));
                             Console.Write("Input the number of records you wish to display: ");
-                            RecordCount = TryParser(Console.ReadLine(), 1, 25);
+                            RecordCount = IntTryParser(Console.ReadLine(), 1, 25);
                             Console.WriteLine(new string('-', 100));
                             Console.Write($"Input the row number you wish to start at (max {artists.Count() - RecordCount + 1}): ");
-                            min = TryParser(Console.ReadLine(), 1, artists.Count() - RecordCount + 1);
+                            min = IntTryParser(Console.ReadLine(), 1, artists.Count() - RecordCount + 1);
                         }
+
+                        //Table header
+                        TableHeader(table);
 
                         //Column header
                         columnHeader = $"{properties[0]}\t{properties[1]}";
@@ -281,8 +310,6 @@ namespace Labb3KamilNiescieronek
                                 Console.WriteLine($"{a.ArtistId}\t\t{EllipseString(a.Name, 9, 0)}");
                             }
                         }
-
-                        ShowOptions(table);
                         break;
                     case "playlist":
                     case "playlists":
@@ -301,11 +328,14 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine("Only a maximum of 25 records may be displayed at a time.");
                             Console.WriteLine(new string('-', 100));
                             Console.Write("Input the number of records you wish to display: ");
-                            RecordCount = TryParser(Console.ReadLine(), 1, 25);
+                            RecordCount = IntTryParser(Console.ReadLine(), 1, 25);
                             Console.WriteLine(new string('-', 100));
                             Console.Write($"Input the row number you wish to start at (max {playlists.Count() - RecordCount + 1}): ");
-                            min = TryParser(Console.ReadLine(), 1, playlists.Count() - RecordCount + 1);
+                            min = IntTryParser(Console.ReadLine(), 1, playlists.Count() - RecordCount + 1);
                         }
+
+                        //Table header
+                        TableHeader(table);
 
                         //Column header
                         columnHeader = string.Join("\t", properties);
@@ -328,8 +358,6 @@ namespace Labb3KamilNiescieronek
                                 Console.WriteLine($"{p.PlaylistId}\t\t{EllipseString(p.Name, 9, 0)}");
                             }
                         }
-                        
-                        ShowOptions(table);
                         break;
 
                     case "playlist_track":
@@ -349,11 +377,14 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine("Only a maximum of 25 records may be displayed at a time.");
                             Console.WriteLine(new string('-', 100));
                             Console.Write("Input the number of records you wish to display: ");
-                            RecordCount = TryParser(Console.ReadLine(), 1, 25);
+                            RecordCount = IntTryParser(Console.ReadLine(), 1, 25);
                             Console.WriteLine(new string('-', 100));
                             Console.Write($"Input the row number you wish to start at (max {playlistTrack.Count() - RecordCount + 1}): ");
-                            min = TryParser(Console.ReadLine(), 1, playlistTrack.Count() - RecordCount + 1);
+                            min = IntTryParser(Console.ReadLine(), 1, playlistTrack.Count() - RecordCount + 1);
                         }
+
+                        //Table header
+                        TableHeader(table);
 
                         //Column header
                         columnHeader = $"{properties[0]}\t{properties[1]}";
@@ -375,8 +406,6 @@ namespace Labb3KamilNiescieronek
                                 Console.WriteLine($"{pt.PlaylistId}\t\t{pt.TrackId}");
                             }
                         }
-
-                        ShowOptions(table);
                         break;
                     case "track":
                     case "tracks":
@@ -395,10 +424,10 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine("Only a maximum of 25 records may be displayed at a time.");
                             Console.WriteLine(new string('-', 100));
                             Console.Write("Input the number of records you wish to display: ");
-                            RecordCount = TryParser(Console.ReadLine(), 1, 25);
+                            RecordCount = IntTryParser(Console.ReadLine(), 1, 25);
                             Console.WriteLine(new string('-', 100));
                             Console.Write($"Input the row number you wish to start at (max {tracks.Count() - RecordCount + 1}): ");
-                            min = TryParser(Console.ReadLine(), 1, tracks.Count() - RecordCount + 1);
+                            min = IntTryParser(Console.ReadLine(), 1, tracks.Count() - RecordCount + 1);
                         }
 
                         //Disclaimer
@@ -408,10 +437,12 @@ namespace Labb3KamilNiescieronek
                             $"The columns related to the genre and media tables will be excluded from the results. \n" +
                             $"Other columns such as albumId, bytes and price will also be omitted from the results.");
                         Console.ResetColor();
-                        Console.WriteLine(new string('-', 100));
+
+                        //Table header
+                        TableHeader(table);
 
                         //Column header
-                        columnHeader = $"Id\t{properties[1]}\t\t\t{properties[5]}\t\t\t\t\t{properties[6]}";
+                        columnHeader = $"Id\t{properties[1]}\t\t\t\t{properties[5]}\t\t\t\t\t{properties[6]}";
                         Console.WriteLine(new string('-', 100));
                         Console.WriteLine(columnHeader);
                         Console.WriteLine(new string('-', 100));
@@ -421,7 +452,7 @@ namespace Labb3KamilNiescieronek
                         {
                             for (int i = min - 1; i < RecordCount + min - 1; i++)
                             {
-                                Console.WriteLine($"{tracks[i].TrackId}\t{EllipseString(tracks[i].Name, 2, -1)}" +
+                                Console.WriteLine($"{tracks[i].TrackId}\t{EllipseString(tracks[i].Name, 3, -2)}" +
                                     $"{EllipseString(tracks[i].Composer, 4, -3)}\t{tracks[i].Milliseconds}");
                             }
                         }
@@ -433,8 +464,6 @@ namespace Labb3KamilNiescieronek
                                     $"{EllipseString(t.Composer, 4, -3)}\t{t.Milliseconds}");
                             }
                         }
-
-                        ShowOptions(table);
                         break;
                     default:
                         Console.WriteLine(new string('-', 100));
@@ -444,7 +473,365 @@ namespace Labb3KamilNiescieronek
                 }
             }
         }
-        private static int TryParser(string input, int min, int max)
+        private static void InsertRow(string table)
+        {
+            Console.WriteLine("Loading. Please wait...");
+            using (var db = new Labb3KamilNiescieronekContext())
+            {
+                switch (table)
+                {
+                    case "album":
+                    case "albums":
+                        var albums = db.Albums.ToList();
+                        var itemAlbum = new Album();
+                        if (albums.Count > 0)
+                        {
+                            itemAlbum = albums[albums.Count - 1];
+                        }
+                        Console.WriteLine(new string('-', 100));
+                        int counter = 0;
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        while (true)
+                        {
+                            Console.Write("Input album name: ");
+                            string albumName = Console.ReadLine().Trim();
+                            if (albumName == string.Empty)
+                            {
+                                break;
+                            }
+
+                            if (albums.Any(a => a.Title.ToLower() == albumName.ToLower()))
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Album {albumName} already exists.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                counter++;
+                                var album = new Album()
+                                {
+                                    AlbumId = itemAlbum.AlbumId + counter,
+                                    Title = albumName
+                                };
+
+                                db.Add(album);
+                                db.SaveChanges();
+                                albums.Add(album);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"Album {album.Title} added to the table.");
+                                Console.ResetColor();
+                            }
+                        }
+
+                        if (counter == 1)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} album was added to the artists table.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} Albums were added to the artists table.");
+                        }
+                        break;
+                    case "artist":
+                    case "artists":
+                        var artists = db.Artists.ToList();
+                        var itemArtist = new Artist();
+                        if (artists.Count > 0)
+                        {
+                            itemArtist = artists[artists.Count - 1];
+                        }
+                        Console.WriteLine(new string('-', 100));
+                        counter = 0;
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        while (true)
+                        {
+                            Console.Write("Input artist name: ");
+                            string artistName = Console.ReadLine().Trim();
+                            if (artistName == string.Empty)
+                            {
+                                break;
+                            }
+
+                            if (artists.Any(a => a.Name.ToLower() == artistName.ToLower()))
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Artist {artistName} already exists.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                counter++;
+                                var artist = new Artist()
+                                {
+                                    ArtistId = itemArtist.ArtistId + counter,
+                                    Name = artistName
+                                };
+
+
+                                db.Add(artist);
+                                db.SaveChanges();
+                                artists.Add(artist);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"Artist {artist.Name} added to the table.");
+                                Console.ResetColor();
+                            }
+                        }
+
+                        if (counter == 1)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} artist was added to the artists table.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} artists were added to the artists table.");
+                        }
+                        break;
+                    case "playlist":
+                    case "playlists":
+                        var tracks = db.Tracks.ToList();
+                        var playlists = db.Playlists.ToList();
+                        var itemPlaylist = new Playlist();
+                        if (playlists.Count > 0)
+                        {
+                            itemPlaylist = playlists[playlists.Count - 1];
+                        }
+                        Console.WriteLine(new string('-', 100));
+                        
+                        string playlistName = string.Empty;
+                        while (true)
+                        {
+                            Console.Write("Name your playlist: ");
+                            playlistName = Console.ReadLine().Trim();
+                            if (playlists.Any(a => a.Name.ToLower() == playlistName.ToLower()))
+                            {
+                                Console.WriteLine("Invalid input. That playlist name already exists.");
+                            }
+                            else if (playlistName.Trim() == string.Empty)
+                            {
+                                Console.WriteLine("The playlist name cannot be an empty string.");
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        
+                        var playlist = new Playlist()
+                        {
+                            PlaylistId = itemPlaylist.PlaylistId + 1,
+                            Name = playlistName
+                        };
+
+                        Console.WriteLine(new string('-', 100));
+                        db.Add(playlist);
+                        db.SaveChanges();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"Playlist {playlist.Name} added successfully to the DB.");
+                        Console.ResetColor();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Insert tracks into the playlist? (y/n): ");
+                        bool answer = YesNoPrompt();
+                        if (answer)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Show track table for additional help? (y/n): ");
+                            answer = YesNoPrompt();
+                            Console.WriteLine(new string('-', 100));
+                            if (answer)
+                            {
+                                ReadTable("tracks");
+                                Console.WriteLine(new string('-', 100));
+                            }
+
+                            Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                            counter = 0;
+                            bool condition = true;
+                            var inputTracker = new List<int>();
+                            while (condition)
+                            {
+                                string input = string.Empty;
+                                int output = 0;
+                                bool parsed = false;
+                                do
+                                {
+                                    Console.Write("Input the TrackId of the song you wish to add: ");
+                                    input = Console.ReadLine();
+                                    if (input == string.Empty)
+                                    {
+                                        condition = false;
+                                        break;
+                                    }
+
+                                    parsed = int.TryParse(input, out output);
+                                    if (!parsed || !tracks.Any(t => t.TrackId == output))
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine("Cannot find TrackId.");
+                                        Console.ResetColor();
+                                    }
+                                    else if (inputTracker.Contains(output))
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine("This track already exists.");
+                                        Console.ResetColor();
+                                    }
+                                    else
+                                    {
+                                        string AddQuery = $"INSERT INTO music.playlist_track VALUES ({itemPlaylist.PlaylistId + 1}, {output})";
+                                        db.Database.ExecuteSqlRaw(AddQuery);
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.WriteLine($"TrackId {output} added to the playlist {playlist.Name}.");
+                                        Console.ResetColor();
+                                        inputTracker.Add(output);
+                                        counter++;
+                                    }
+                                } while (!parsed || !tracks.Any(t => t.TrackId == output));
+                            }
+                            if (counter == 1)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.WriteLine($"{counter} track was added to the playlist {playlist.Name}.");
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.WriteLine($"{counter} tracks were added to the playlist {playlist.Name}.");
+                            }
+                        }
+                        break;
+                    case "playlist_track":
+                    case "playlist_tracks":
+
+                        break;
+                    case "track":
+                    case "tracks":
+
+                        break;
+                    default:
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Invalid input");
+                        ShowOptions();
+                        break;
+                }
+            }
+        }
+        private static void UpdateRow(string table)
+        {
+            Console.WriteLine("Loading. Please wait...");
+            using (var db = new Labb3KamilNiescieronekContext())
+            {
+                switch (table)
+                {
+                    case "album":
+                    case "albums":
+
+                        break;
+                    case "artist":
+                    case "artists":
+
+                        break;
+                    case "playlist":
+                    case "playlists":
+
+                        break;
+                    case "playlist_track":
+                    case "playlist_tracks":
+
+                        break;
+                    case "track":
+                    case "tracks":
+
+                        break;
+                    default:
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Invalid input");
+                        ShowOptions();
+                        break;
+                }
+            }
+            /*private static void UpdateCustomer()
+        {
+            using (var context = new ITHSDemoContext())
+            {
+                var customer = context.Customers.First();
+                customer.FirstName = "Michael";
+                customer.LastName = "Jordan";
+
+                context.SaveChanges();
+            }
+        }   */
+        }
+        private static void DeleteRow(string table)
+        {
+            Console.WriteLine("Loading. Please wait...");
+            using (var db = new Labb3KamilNiescieronekContext())
+            {
+                switch (table)
+                {
+                    case "album":
+                    case "albums":
+
+                        break;
+                    case "artist":
+                    case "artists":
+
+                        break;
+                    case "playlist":
+                    case "playlists":
+
+                        break;
+                    case "playlist_track":
+                    case "playlist_tracks":
+
+                        break;
+                    case "track":
+                    case "tracks":
+
+                        break;
+                    default:
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Invalid input");
+                        ShowOptions();
+                        break;
+                }
+            }
+            /*private static void DeleteCustomer()
+             {
+                using (var context = new ITHSDemoContext())
+                {
+                    var customer = context.Customers.First();
+                    context.Customers.Remove(customer);
+
+                    context.SaveChanges();
+                }
+            }*/
+        }
+        private static bool YesNoPrompt()
+        {
+            while (true)
+            {
+                string answer = Console.ReadLine()
+                .Trim(new char[] { ' ', '\"', '\'', '-', '.', ',', ';', '<', '>' }).ToLower();
+                if (answer == "y" || answer == "yes")
+                {
+                    return true;
+                }
+                else if (answer == "n" || answer == "no")
+                {
+                    return false;
+                }
+                else
+                {
+                    Console.Write("Invalid input. Please type \"yes\" or \"no\": ");
+                }
+            }
+        }
+        private static int IntTryParser(string input, int min, int max)
         {
             int output = 0;
             bool parsed = false;
@@ -471,11 +858,7 @@ namespace Labb3KamilNiescieronek
                 case "-select":
                     break;
                 case "-add":
-                    Console.WriteLine("Loading table. Please wait...");
-                    using (var db = new Labb3KamilNiescieronekContext())
-                    {
-
-                    }
+                    //Placeholder
                     break;
                 case "-update":
                     break;
