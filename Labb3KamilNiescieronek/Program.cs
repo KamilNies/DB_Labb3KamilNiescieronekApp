@@ -15,8 +15,8 @@ namespace Labb3KamilNiescieronek
         {
             //Note to self change Record mentions to rows, makes it clearer
             #region Test space
-            string testing = "playlist_track";
-            InsertRow(testing);
+            string testing = "track";
+            UpdateRow(testing);
             Console.ReadKey();
             #endregion Test space
             #region Check DB
@@ -32,16 +32,7 @@ namespace Labb3KamilNiescieronek
                     {
                         var sql = File.ReadAllText("../../../script.sql");
                         context.Database.EnsureCreated();
-                        using (var command = new SqlConnection(Labb3KamilNiescieronekContext.connectionString))
-                        {
-                            command.Open();
-                            using (var cmd = command.CreateCommand())
-                            {
-                                cmd.CommandText = sql;
-                                cmd.ExecuteNonQuery();
-                            }
-                            command.Close();
-                        }
+                        context.Database.ExecuteSqlRaw(sql);
                     }
                     catch (Exception e)
                     {
@@ -81,38 +72,11 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine(new string('-', 100));
                             ReadTable(parameters[1]);
                             ShowOptions(parameters[1]);
-
-                            bool secondFlag = true;
-                            while (secondFlag)
-                            {
-                                string[] tableOptions = Console.ReadLine()
-                                    .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
-                                tableOptions = Array.ConvertAll(tableOptions, x => x.ToLower());
-
-                                //Placeholder for TableOptionsPrompt method when done
-
-                                /*
-                                ----------------------------------------------------------------------------------------------------
-                                Labb3KamilNiescieronek DB | Playlist table | Select any of the following parameters:
-                                ----------------------------------------------------------------------------------------------------
-                                -tables
-                                -select <table name>
-                                -add
-                                -update <PK_Id>
-                                -delete <PK_Id>
-                                -options
-                                -clear
-                                -help
-                                -exit
-                                ----------------------------------------------------------------------------------------------------
-                                */
-                            }
-
-                            return; //Maybe change later. Also need a way to return to regular loop... Or do I...
+                            TableOptionsPrompt(parameters[1]);
+                            return;
                         }
                         else
                         {
-                            #region Ignore for now
                             Console.WriteLine(new string('-', 100));
                             Console.Write("Input the table name that you wish to display: ");
                             string tableName = Console.ReadLine()
@@ -120,7 +84,7 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine(new string('-', 100));
                             ReadTable(tableName);
                             ShowOptions(tableName);
-                            #endregion Ignore for now
+                            TableOptionsPrompt(tableName);
                         }
                         break;
                     case "-option":
@@ -467,9 +431,11 @@ namespace Labb3KamilNiescieronek
                 int artistId = 0;
                 if (artistInputId == string.Empty)
                 {
+                    Console.WriteLine(new string('-', 100));
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Cannot cancel prompt yet. You need to add an artist first.");
+                    Console.WriteLine("Prompt canceled. Unable to add last album to table.");
                     Console.ResetColor();
+                    return 0;
                 }
                 else
                 {
@@ -511,29 +477,17 @@ namespace Labb3KamilNiescieronek
                             }
                             else
                             {
-                                //var album = new Album()
-                                //{
-                                //    AlbumId = albums.Last().AlbumId + 1,
-                                //    Title = albumName,
-                                //    ArtistId = InputArtistPrompt(db, albums)
-                                //};
-
-                                //counter++;
-                                //string AddQuery =
-                                //    $"INSERT INTO music.albums VALUES ({albums.OrderBy(x => x.AlbumId).Last().AlbumId + 1}," +
-                                //    $" '{albumName}', {InputArtistPrompt(db, albums)})";
-                                //db.Database.ExecuteSqlRaw(AddQuery);
-                                //Console.ForegroundColor = ConsoleColor.Green;
-                                //Console.WriteLine($"Album {albumName} added to the table.");
-                                //Console.ResetColor();
-                                //albums.Add(album);
-
                                 var album = new Album()
                                 {
                                     AlbumId = albums.OrderBy(x => x.AlbumId).Last().AlbumId + 1,
                                     Title = albumName,
                                     ArtistId = InputArtistPrompt(db, albums)
                                 };
+
+                                if (album.ArtistId == 0)
+                                {
+                                    break;
+                                }
 
                                 counter++;
                                 db.Add(album);
@@ -555,6 +509,7 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine(new string('-', 100));
                             Console.WriteLine($"{counter} albums were added to the artists table.");
                         }
+                        ShowOptions(table);
                         break;
                     case "artist":
                     case "artists":
@@ -600,7 +555,6 @@ namespace Labb3KamilNiescieronek
                                 Console.ResetColor();
                             }
                         }
-
                         if (counter == 1)
                         {
                             Console.WriteLine(new string('-', 100));
@@ -611,6 +565,7 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine(new string('-', 100));
                             Console.WriteLine($"{counter} artists were added to the artists table.");
                         }
+                        ShowOptions(table);
                         break;
                     case "playlist":
                     case "playlists":
@@ -706,7 +661,7 @@ namespace Labb3KamilNiescieronek
                                         string AddQuery = $"INSERT INTO music.playlist_track VALUES ({itemPlaylist.PlaylistId + 1}, {output})";
                                         db.Database.ExecuteSqlRaw(AddQuery);
                                         Console.ForegroundColor = ConsoleColor.Green;
-                                        Console.WriteLine($"TrackId {output} added to the playlist {playlist.Name}.");
+                                        Console.WriteLine($"TrackId {output} added to the playlist.");
                                         Console.ResetColor();
                                         inputTrack.Add(output);
                                         counter++;
@@ -716,18 +671,20 @@ namespace Labb3KamilNiescieronek
                             if (counter == 1)
                             {
                                 Console.WriteLine(new string('-', 100));
-                                Console.WriteLine($"{counter} track was added to the playlist {playlist.Name}.");
+                                Console.WriteLine($"{counter} track was added to the playlist.");
                             }
                             else
                             {
                                 Console.WriteLine(new string('-', 100));
-                                Console.WriteLine($"{counter} tracks were added to the playlist {playlist.Name}.");
+                                Console.WriteLine($"{counter} tracks were added to the playlist.");
                             }
                         }
+                        ShowOptions(table);
                         break;
                     case "playlist_track":
                     case "playlist_tracks":
                         tracks = db.Tracks.ToList();
+
                         var playlistTrack = db.PlaylistTracks.ToList();
                         itemPlaylist = new Playlist();
                         Console.WriteLine(new string('-', 100));
@@ -740,8 +697,10 @@ namespace Labb3KamilNiescieronek
                             Console.WriteLine(new string('-', 100));
                         }
 
-                        Console.WriteLine("Input ");
-
+                        Console.Write("Select PlaylistId: ");
+                        int playlistId = 
+                            IntTryParser(Console.ReadLine(), playlistTrack.Min(x => x.PlaylistId), playlistTrack.Max(x => x.PlaylistId));
+                        Console.WriteLine(new string('-', 100));
                         Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
                         counter = 0;
                         bool condition = true;
@@ -768,6 +727,12 @@ namespace Labb3KamilNiescieronek
                                     Console.WriteLine("Cannot find TrackId.");
                                     Console.ResetColor();
                                 }
+                                else if (playlistTrack.Where(x => x.PlaylistId == playlistId).Any(z => z.TrackId == output))
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine("This track already exists.");
+                                    Console.ResetColor();
+                                }
                                 else if (inputTracker.Contains(output))
                                 {
                                     Console.ForegroundColor = ConsoleColor.Red;
@@ -776,12 +741,10 @@ namespace Labb3KamilNiescieronek
                                 }
                                 else
                                 {
-                                    string AddQuery = $"INSERT INTO music.playlist_track VALUES ({itemPlaylist.PlaylistId + 1}, {output})";
-
-                                    //albums.OrderBy(x => x.AlbumId).Last().AlbumId + 1
+                                    string AddQuery = $"INSERT INTO music.playlist_track VALUES ({playlistId}, {output})";
                                     db.Database.ExecuteSqlRaw(AddQuery);
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine($"TrackId {output} added to the playlist {playlist.Name}.");
+                                    Console.WriteLine($"TrackId {output} added to the playlist.");
                                     Console.ResetColor();
                                     inputTracker.Add(output);
                                     counter++;
@@ -791,23 +754,155 @@ namespace Labb3KamilNiescieronek
                         if (counter == 1)
                         {
                             Console.WriteLine(new string('-', 100));
-                            Console.WriteLine($"{counter} track was added to the playlist {playlist.Name}.");
+                            Console.WriteLine($"{counter} track was added to the playlist.");
                         }
                         else
                         {
                             Console.WriteLine(new string('-', 100));
-                            Console.WriteLine($"{counter} tracks were added to the playlist {playlist.Name}.");
+                            Console.WriteLine($"{counter} tracks were added to the playlist.");
                         }
-
+                        ShowOptions(table);
                         break;
                     case "track":
                     case "tracks":
+                        tracks = db.Tracks.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        counter = 0;
+                        int milli = 0;
+                        string trackName = string.Empty;
+                        string composer = string.Empty;
+                        while (true)
+                        {
+                            Console.Write("Input track name: ");
+                            trackName = Console.ReadLine().TrimStart();
+                            if (trackName == string.Empty)
+                            {
+                                break;
+                            }
 
+                            if (tracks.Any(a => a.Name.ToLower() == trackName.ToLower()))
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Track {trackName} already exists.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                while (true)
+                                {
+                                    Console.Write("Input composer: ");
+                                    composer = Console.ReadLine().TrimStart();
+                                    if (composer == string.Empty)
+                                    {
+                                        Console.WriteLine(new string('-', 100));
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine("Prompt canceled. Unable to add last track to table.");
+                                        Console.ResetColor();
+
+
+                                        if (counter == 1)
+                                        {
+                                            Console.WriteLine(new string('-', 100));
+                                            Console.WriteLine($"{counter} track was added to the track table.");
+                                            Console.WriteLine(new string('-', 100));
+                                            Console.WriteLine("The AlbumId, GenreId and Bytes column were set to null.");
+                                            Console.WriteLine("The MediaTypeId and UnitPrice columns were set to 1.");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine(new string('-', 100));
+                                            Console.WriteLine($"{counter} tracks were added to the track table.");
+                                            if (counter != 0)
+                                            {
+                                                Console.WriteLine(new string('-', 100));
+                                                Console.WriteLine("The AlbumId, GenreId and Bytes column were set to null.");
+                                                Console.WriteLine("The MediaTypeId and UnitPrice columns were set to 1.");
+                                            }
+
+                                        }
+                                        ShowOptions(table);
+                                        return;
+                                    }
+
+                                    Console.Write("Input track length in milliseconds: ");
+                                    string milliseconds = Console.ReadLine();
+
+                                    if (composer == string.Empty)
+                                    {
+                                        Console.WriteLine(new string('-', 100));
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine("Prompt canceled. Unable to add last track to table.");
+                                        Console.ResetColor();
+
+                                        if (counter == 1)
+                                        {
+                                            Console.WriteLine(new string('-', 100));
+                                            Console.WriteLine($"{counter} track was added to the track table.");
+                                            Console.WriteLine(new string('-', 100));
+                                            Console.WriteLine("The AlbumId, GenreId and Bytes column were set to null.");
+                                            Console.WriteLine("The MediaTypeId and UnitPrice columns were set to 1.");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine(new string('-', 100));
+                                            Console.WriteLine($"{counter} tracks were added to the track table.");
+                                            if (counter != 0)
+                                            {
+                                                Console.WriteLine(new string('-', 100));
+                                                Console.WriteLine("The AlbumId, GenreId and Bytes column were set to null.");
+                                                Console.WriteLine("The MediaTypeId and UnitPrice columns were set to 1.");
+                                            }
+                                        }
+                                        ShowOptions(table);
+                                        return;
+                                    }
+
+                                    milli = IntTryParser(milliseconds, 1, 9999999);
+                                    break;
+
+                                }
+
+                                var track = new Track()
+                                {
+                                    TrackId = tracks.OrderBy(x => x.TrackId).Last().TrackId + 1,
+                                    Name = trackName,
+                                    AlbumId = null,
+                                    MediaTypeId = 1,
+                                    GenreId = null,
+                                    Composer = composer,
+                                    Milliseconds = milli,
+                                    Bytes = null,
+                                    UnitPrice = 1
+                                };
+
+                                counter++;
+                                db.Add(track);
+                                db.SaveChanges();
+                                tracks.Add(track);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"TrackId {track.TrackId} added to the tracks table.");
+                                Console.ResetColor();
+                            }
+                            
+                        }
+
+                        if (counter == 1)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} track was added to the track table.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} tracks were added to the track table.");
+                        }
+                        ShowOptions(table);
                         break;
                     default:
                         Console.WriteLine(new string('-', 100));
                         Console.WriteLine("Invalid input");
-                        ShowOptions();
+                        ShowOptions(table);
                         break;
                 }
             }
@@ -941,59 +1036,63 @@ namespace Labb3KamilNiescieronek
 
             return output;
         }
-        private static bool TableOptionsPrompt(string table, params string[] tableOptions)
+        private static void TableOptionsPrompt(string table)
         {
-            switch (tableOptions[0])
+            bool flag = true;
+            while (flag)
             {
-                case "-table":
-                case "-tables":
-                    DisplayTableNames();
-                    break;
-                case "-select":
-                    break;
-                case "-add":
-                    //Placeholder
-                    break;
-                case "-update":
-                    break;
-                case "-delete":
-                    break;
-                case "-option":
-                case "-options":
-                    ShowOptions(table);
-                    break;
-                case "-clear":
-                    Console.Clear();
-                    ShowOptions(table);
-                    break;
-                case "-help":
-                    ShowHelp(table);
-                    break;
-                case "-exit":
-                    return false;
-                default:
-                    Console.WriteLine(new string('-', 100));
-                    Console.WriteLine("Invalid input");
-                    ShowOptions();
-                    break;
-            }
-            return true;
+                string[] parameters = Console.ReadLine()
+                                    .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
+                parameters = Array.ConvertAll(parameters, x => x.ToLower());
+                switch (parameters[0])
+                {
+                    case "-table":
+                    case "-tables":
+                        DisplayTableNames();
+                        break;
+                    case "-select":
+                        if (parameters.Length > 1)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            ReadTable(parameters[1]);
+                            ShowOptions(parameters[1]);
+                            TableOptionsPrompt(parameters[1]);
+                            return;
+                        }
+                        break;
+                    case "-add":
+                        Console.WriteLine(new string('-', 100));
+                        InsertRow(table);
+                        break;
+                    case "-update":
+                        Console.WriteLine(new string('-', 100));
 
-            /*
-            ----------------------------------------------------------------------------------------------------
-            Labb3KamilNiescieronek DB | Playlist table | Select any of the following parameters:
-            ----------------------------------------------------------------------------------------------------
-            -tables
-            -select <table name>
-            -add
-            -update <PK_Id>
-            -delete <PK_Id>
-            -options
-            -clear
-            -help
-            -exit
-            ----------------------------------------------------------------------------------------------------
-            */
+                        break;
+                    case "-delete":
+                        Console.WriteLine(new string('-', 100));
+
+                        break;
+                    case "-option":
+                    case "-options":
+                        ShowOptions(table);
+                        break;
+                    case "-clear":
+                        Console.Clear();
+                        ShowOptions(table);
+                        break;
+                    case "-help":
+                        ShowHelp(table);
+                        break;
+                    case "-exit":
+                        flag = false;
+                        break;
+                    default:
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Invalid input");
+                        ShowOptions();
+                        break;
+                }
+            }
         }
         private static string EllipseString(string input, int tabMultiplier, int offset)
         {
