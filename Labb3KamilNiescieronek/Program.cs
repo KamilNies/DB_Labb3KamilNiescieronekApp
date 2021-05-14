@@ -15,7 +15,7 @@ namespace Labb3KamilNiescieronek
         {
             //Note to self change Record mentions to rows, makes it clearer
             #region Test space
-            string testing = "track";
+            string testing = "album";
             UpdateRow(testing);
             Console.ReadKey();
             #endregion Test space
@@ -85,8 +85,8 @@ namespace Labb3KamilNiescieronek
                             ReadTable(tableName);
                             ShowOptions(tableName);
                             TableOptionsPrompt(tableName);
+                            return;
                         }
-                        break;
                     case "-option":
                     case "-options":
                         ShowOptions();
@@ -615,7 +615,7 @@ namespace Labb3KamilNiescieronek
                         if (answer)
                         {
                             Console.WriteLine(new string('-', 100));
-                            Console.Write("Show track table for additional help? (y/n): ");
+                            Console.Write("Display track table for additional help? (y/n): ");
                             answer = YesNoPrompt();
                             Console.WriteLine(new string('-', 100));
                             if (answer)
@@ -688,7 +688,7 @@ namespace Labb3KamilNiescieronek
                         var playlistTrack = db.PlaylistTracks.ToList();
                         itemPlaylist = new Playlist();
                         Console.WriteLine(new string('-', 100));
-                        Console.Write("Show playlist table for additional help? (y/n): ");
+                        Console.Write("Display playlist table for additional help? (y/n): ");
                         answer = YesNoPrompt();
                         Console.WriteLine(new string('-', 100));
                         if (answer)
@@ -909,6 +909,17 @@ namespace Labb3KamilNiescieronek
         }
         private static void UpdateRow(string table)
         {
+            /*private static void UpdateCustomer()
+            {
+                using (var context = new ITHSDemoContext())
+                {
+                    var customer = context.Customers.First();
+                    customer.FirstName = "Michael";
+                    customer.LastName = "Jordan";
+            
+                    context.SaveChanges();
+                }
+            }   */
             Console.WriteLine("Loading. Please wait...");
             using (var db = new Labb3KamilNiescieronekContext())
             {
@@ -916,6 +927,80 @@ namespace Labb3KamilNiescieronek
                 {
                     case "album":
                     case "albums":
+                        var albums = db.Albums.ToList();
+                        var artist = db.Artists.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display albums table for additional help? (y/n): ");
+                        bool answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("album");
+                            Console.WriteLine(new string('-', 100));
+                        }
+                        int albumId = 0;
+                        bool exist = true;
+                        Console.Write("Input AlbumId: ");
+                        do
+                        {
+                            albumId = IntTryParser(Console.ReadLine(), albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId));
+                            exist = albums.Any(a => a.AlbumId == albumId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find AlbumId. Input another AlbumId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine($"Existing title: \'{albums.Where(a => a.AlbumId == albumId).Select(a => a.Title)}\'.");
+                        Console.Write("Input new title: ");
+                        string newTitle = Console.ReadLine().TrimStart();
+                        if (newTitle == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to title.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        var album = albums.SingleOrDefault(a => a.AlbumId == albumId);
+                        if (album != null)
+                        {
+                            album.Title = newTitle;
+                            db.SaveChanges();
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Title successfully updated.");
+                            Console.ResetColor();
+                        }
+
+
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine($"Existing ArtistId: \'{albums.Where(a => a.AlbumId == albumId).Select(a => a.ArtistId)}\'.");
+                        Console.Write("Input new ArtistId: ");
+
+                        //Fix later all wrong
+
+                        int newArtistId = IntTryParser(Console.ReadLine(), );
+                        if (newTitle == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to title.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        var album = albums.SingleOrDefault(a => a.AlbumId == albumId);
+                        if (album != null)
+                        {
+                            album.Title = newTitle;
+                            db.SaveChanges();
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Title successfully updated.");
+                            Console.ResetColor();
+                        }
 
                         break;
                     case "artist":
@@ -942,19 +1027,29 @@ namespace Labb3KamilNiescieronek
                 }
             }
             /*private static void UpdateCustomer()
-        {
-            using (var context = new ITHSDemoContext())
             {
-                var customer = context.Customers.First();
-                customer.FirstName = "Michael";
-                customer.LastName = "Jordan";
+                using (var context = new ITHSDemoContext())
+                {
+                    var customer = context.Customers.First();
+                    customer.FirstName = "Michael";
+                    customer.LastName = "Jordan";
 
-                context.SaveChanges();
-            }
-        }   */
+                    context.SaveChanges();
+                }
+            }   */
         }
         private static void DeleteRow(string table)
         {
+            /*private static void DeleteCustomer()
+             {
+                using (var context = new ITHSDemoContext())
+                {
+                    var customer = context.Customers.First();
+                    context.Customers.Remove(customer);
+            
+                    context.SaveChanges();
+                }
+            }*/
             Console.WriteLine("Loading. Please wait...");
             using (var db = new Labb3KamilNiescieronekContext())
             {
@@ -1059,18 +1154,29 @@ namespace Labb3KamilNiescieronek
                             TableOptionsPrompt(parameters[1]);
                             return;
                         }
-                        break;
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Input the table name that you wish to display: ");
+                            string tableName = Console.ReadLine()
+                                .Trim(new char[] { ' ', '-', '.', ',', ';', '<', '>' }).ToLower();
+                            Console.WriteLine(new string('-', 100));
+                            ReadTable(tableName);
+                            ShowOptions(tableName);
+                            TableOptionsPrompt(tableName);
+                            return;
+                        }
                     case "-add":
                         Console.WriteLine(new string('-', 100));
                         InsertRow(table);
                         break;
                     case "-update":
                         Console.WriteLine(new string('-', 100));
-
+                        UpdateRow(table);
                         break;
                     case "-delete":
                         Console.WriteLine(new string('-', 100));
-
+                        DeleteRow(table);
                         break;
                     case "-option":
                     case "-options":
@@ -1144,76 +1250,5 @@ namespace Labb3KamilNiescieronek
             Console.WriteLine(new string('-', 100));
         }
         #endregion Methods
-
-        /*/// <summary>
-        /// Create - The C in CRUD
-        /// </summary>
-        private static void InsertCustomer()
-        {
-            using (var context = new ITHSDemoContext())
-            {
-                var customer = new Customer()
-                {
-                    FirstName = "Claes",
-                    LastName = "Engelin"
-                };
-
-                context.Add(customer);
-
-                customer = new()
-                {
-                    FirstName = "Anna",
-                    LastName = "Engelin"
-                };
-
-                context.SaveChanges();
-            }
-        }
-
-        /// <summary>
-        /// Read - The R in CRUD
-        /// </summary>
-        private static void ReadCustomer()
-        {
-            using (var context = new ITHSDemoContext())
-            {
-                var customers = context.Customers.ToList();
-
-                foreach (var c in customers)
-                {
-                    Console.WriteLine($"{c.Id}  {c.FirstName} {c.LastName}");
-                }
-            }
-            return;
-        }
-
-        /// <summary>
-        /// Update - The U in CRUD
-        /// </summary>
-        private static void UpdateCustomer()
-        {
-            using (var context = new ITHSDemoContext())
-            {
-                var customer = context.Customers.First();
-                customer.FirstName = "Michael";
-                customer.LastName = "Jordan";
-
-                context.SaveChanges();
-            }
-        }
-
-        /// <summary>
-        /// Delete - The D in CRUD
-        /// </summary>
-        private static void DeleteCustomer()
-        {
-            using (var context = new ITHSDemoContext())
-            {
-                var customer = context.Customers.First();
-                context.Customers.Remove(customer);
-
-                context.SaveChanges();
-            }
-        }*/
     }
 }
