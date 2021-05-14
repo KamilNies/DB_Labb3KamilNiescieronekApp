@@ -15,25 +15,9 @@ namespace Labb3KamilNiescieronek
         {
             //Note to self change Record mentions to rows, makes it clearer
             #region Test space
-            string testing = "artist";
+            string testing = "playlist_track";
             InsertRow(testing);
             Console.ReadKey();
-            //string test = "playlists";
-            //InsertRow(test);
-            //Console.ReadKey();
-            //ReadTable(test);
-            //Console.ReadKey();
-            //string test = "playlist";
-            //bool boolTest = TableOptionsPrompt(test, "-add");
-            //if (boolTest)
-            //{
-            //    Console.WriteLine("Normal return");
-            //}
-            //else
-            //{
-            //    Console.WriteLine("Exit return successful");
-            //}
-            //Console.ReadKey();
             #endregion Test space
             #region Check DB
             //Check connection. Create DB if connection does not exist
@@ -473,6 +457,30 @@ namespace Labb3KamilNiescieronek
                 }
             }
         }
+        private static int InputArtistPrompt(Labb3KamilNiescieronekContext db, List<Album> album)
+        {
+            var artists = db.Artists.ToList();
+            while (true)
+            {
+                Console.Write("Input an ArtistId: ");
+                string artistInputId = Console.ReadLine().TrimStart();
+                int artistId = 0;
+                if (artistInputId == string.Empty)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Cannot cancel prompt yet. You need to add an artist first.");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    artistId = IntTryParser(artistInputId, album.Min(a => a.ArtistId), album.Max(a => a.ArtistId));
+                }
+                if (artistId > 0 && artistId <= album.Max(a => a.ArtistId))
+                {
+                    return artistId;
+                }
+            }
+        }
         private static void InsertRow(string table)
         {
             Console.WriteLine("Loading. Please wait...");
@@ -483,18 +491,13 @@ namespace Labb3KamilNiescieronek
                     case "album":
                     case "albums":
                         var albums = db.Albums.ToList();
-                        var itemAlbum = new Album();
-                        if (albums.Count > 0)
-                        {
-                            itemAlbum = albums[albums.Count - 1];
-                        }
                         Console.WriteLine(new string('-', 100));
-                        int counter = 0;
                         Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        int counter = 0;
                         while (true)
                         {
                             Console.Write("Input album name: ");
-                            string albumName = Console.ReadLine().Trim();
+                            string albumName = Console.ReadLine().TrimStart();
                             if (albumName == string.Empty)
                             {
                                 break;
@@ -508,13 +511,31 @@ namespace Labb3KamilNiescieronek
                             }
                             else
                             {
-                                counter++;
+                                //var album = new Album()
+                                //{
+                                //    AlbumId = albums.Last().AlbumId + 1,
+                                //    Title = albumName,
+                                //    ArtistId = InputArtistPrompt(db, albums)
+                                //};
+
+                                //counter++;
+                                //string AddQuery =
+                                //    $"INSERT INTO music.albums VALUES ({albums.OrderBy(x => x.AlbumId).Last().AlbumId + 1}," +
+                                //    $" '{albumName}', {InputArtistPrompt(db, albums)})";
+                                //db.Database.ExecuteSqlRaw(AddQuery);
+                                //Console.ForegroundColor = ConsoleColor.Green;
+                                //Console.WriteLine($"Album {albumName} added to the table.");
+                                //Console.ResetColor();
+                                //albums.Add(album);
+
                                 var album = new Album()
                                 {
-                                    AlbumId = itemAlbum.AlbumId + counter,
-                                    Title = albumName
+                                    AlbumId = albums.OrderBy(x => x.AlbumId).Last().AlbumId + 1,
+                                    Title = albumName,
+                                    ArtistId = InputArtistPrompt(db, albums)
                                 };
 
+                                counter++;
                                 db.Add(album);
                                 db.SaveChanges();
                                 albums.Add(album);
@@ -532,7 +553,7 @@ namespace Labb3KamilNiescieronek
                         else
                         {
                             Console.WriteLine(new string('-', 100));
-                            Console.WriteLine($"{counter} Albums were added to the artists table.");
+                            Console.WriteLine($"{counter} albums were added to the artists table.");
                         }
                         break;
                     case "artist":
@@ -549,7 +570,7 @@ namespace Labb3KamilNiescieronek
                         while (true)
                         {
                             Console.Write("Input artist name: ");
-                            string artistName = Console.ReadLine().Trim();
+                            string artistName = Console.ReadLine().TrimStart();
                             if (artistName == string.Empty)
                             {
                                 break;
@@ -601,17 +622,17 @@ namespace Labb3KamilNiescieronek
                             itemPlaylist = playlists[playlists.Count - 1];
                         }
                         Console.WriteLine(new string('-', 100));
-                        
+
                         string playlistName = string.Empty;
                         while (true)
                         {
                             Console.Write("Name your playlist: ");
-                            playlistName = Console.ReadLine().Trim();
+                            playlistName = Console.ReadLine().TrimStart();
                             if (playlists.Any(a => a.Name.ToLower() == playlistName.ToLower()))
                             {
                                 Console.WriteLine("Invalid input. That playlist name already exists.");
                             }
-                            else if (playlistName.Trim() == string.Empty)
+                            else if (playlistName == string.Empty)
                             {
                                 Console.WriteLine("The playlist name cannot be an empty string.");
                             }
@@ -620,7 +641,7 @@ namespace Labb3KamilNiescieronek
                                 break;
                             }
                         }
-                        
+
                         var playlist = new Playlist()
                         {
                             PlaylistId = itemPlaylist.PlaylistId + 1,
@@ -650,9 +671,9 @@ namespace Labb3KamilNiescieronek
 
                             Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
                             counter = 0;
-                            bool condition = true;
-                            var inputTracker = new List<int>();
-                            while (condition)
+                            bool condi = true;
+                            var inputTrack = new List<int>();
+                            while (condi)
                             {
                                 string input = string.Empty;
                                 int output = 0;
@@ -663,7 +684,7 @@ namespace Labb3KamilNiescieronek
                                     input = Console.ReadLine();
                                     if (input == string.Empty)
                                     {
-                                        condition = false;
+                                        condi = false;
                                         break;
                                     }
 
@@ -674,7 +695,7 @@ namespace Labb3KamilNiescieronek
                                         Console.WriteLine("Cannot find TrackId.");
                                         Console.ResetColor();
                                     }
-                                    else if (inputTracker.Contains(output))
+                                    else if (inputTrack.Contains(output))
                                     {
                                         Console.ForegroundColor = ConsoleColor.Red;
                                         Console.WriteLine("This track already exists.");
@@ -687,7 +708,7 @@ namespace Labb3KamilNiescieronek
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.WriteLine($"TrackId {output} added to the playlist {playlist.Name}.");
                                         Console.ResetColor();
-                                        inputTracker.Add(output);
+                                        inputTrack.Add(output);
                                         counter++;
                                     }
                                 } while (!parsed || !tracks.Any(t => t.TrackId == output));
@@ -706,6 +727,77 @@ namespace Labb3KamilNiescieronek
                         break;
                     case "playlist_track":
                     case "playlist_tracks":
+                        tracks = db.Tracks.ToList();
+                        var playlistTrack = db.PlaylistTracks.ToList();
+                        itemPlaylist = new Playlist();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Show playlist table for additional help? (y/n): ");
+                        answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("playlist");
+                            Console.WriteLine(new string('-', 100));
+                        }
+
+                        Console.WriteLine("Input ");
+
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        counter = 0;
+                        bool condition = true;
+                        var inputTracker = new List<int>();
+                        while (condition)
+                        {
+                            string input = string.Empty;
+                            int output = 0;
+                            bool parsed = false;
+                            do
+                            {
+                                Console.Write("Input the TrackId of the song you wish to add: ");
+                                input = Console.ReadLine();
+                                if (input == string.Empty)
+                                {
+                                    condition = false;
+                                    break;
+                                }
+
+                                parsed = int.TryParse(input, out output);
+                                if (!parsed || !tracks.Any(t => t.TrackId == output))
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine("Cannot find TrackId.");
+                                    Console.ResetColor();
+                                }
+                                else if (inputTracker.Contains(output))
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine("This track already exists.");
+                                    Console.ResetColor();
+                                }
+                                else
+                                {
+                                    string AddQuery = $"INSERT INTO music.playlist_track VALUES ({itemPlaylist.PlaylistId + 1}, {output})";
+
+                                    //albums.OrderBy(x => x.AlbumId).Last().AlbumId + 1
+                                    db.Database.ExecuteSqlRaw(AddQuery);
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine($"TrackId {output} added to the playlist {playlist.Name}.");
+                                    Console.ResetColor();
+                                    inputTracker.Add(output);
+                                    counter++;
+                                }
+                            } while (!parsed || !tracks.Any(t => t.TrackId == output));
+                        }
+                        if (counter == 1)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} track was added to the playlist {playlist.Name}.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine($"{counter} tracks were added to the playlist {playlist.Name}.");
+                        }
 
                         break;
                     case "track":
@@ -840,7 +932,9 @@ namespace Labb3KamilNiescieronek
                 parsed = int.TryParse(input, out output);
                 if (!parsed || (output < min || output > max))
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write($"Invalid input. Please input a number between {min} and {max}: ");
+                    Console.ResetColor();
                     input = Console.ReadLine();
                 }
             } while (!parsed || (output < min || output > max));
@@ -943,9 +1037,9 @@ namespace Labb3KamilNiescieronek
             Console.WriteLine("-tables \t\tDisplays the available table names in the DB.");
             Console.WriteLine("-select <table name> \tSelect whatever table that you wish to work towards.");
             Console.WriteLine("-add \t\t\tAdd records to whatever table is loaded or specified in the header.");
-            Console.WriteLine("-update <PK_Id> \t\tUpdate the specified row/record.");
-            Console.WriteLine("-delete <PK_Id> \t\tDelete the entire row specified.");
-            Console.WriteLine("-options \t\tPrints the options prompt on the screen");
+            Console.WriteLine("-update \t\tUpdate the specified row/record.");
+            Console.WriteLine("-delete \t\tDelete the entire row specified.");
+            Console.WriteLine("-options \t\tPrints the options prompt on the screen.");
             Console.WriteLine("-clear \t\t\tPartially clears the console window.");
             Console.WriteLine("-exit \t\t\tExits application.");
             Console.WriteLine(new string('-', 100));
