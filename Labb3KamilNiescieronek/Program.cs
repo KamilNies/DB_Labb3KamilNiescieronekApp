@@ -539,6 +539,7 @@ namespace Labb3KamilNiescieronek
                 }
             }
         }
+       
         private static void InsertRow(string table)
         {
             Console.WriteLine("Loading. Please wait...");
