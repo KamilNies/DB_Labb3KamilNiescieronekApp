@@ -1,6 +1,5 @@
 ﻿using Labb3KamilNiescieronek.Data;
 using Labb3KamilNiescieronek.Models;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -15,8 +14,11 @@ namespace Labb3KamilNiescieronek
         {
             //Note to self change Record mentions to rows, makes it clearer
             #region Test space
-            string testing = "playlist_track";
-            UpdateRow(testing);
+            //string testing = "albums";
+            //InsertRow(testing);
+            //Console.ReadKey();
+            string testing = "albums";
+            DeleteRow(testing);
             Console.ReadKey();
             #endregion Test space
             #region Check DB
@@ -408,7 +410,7 @@ namespace Labb3KamilNiescieronek
                         {
                             foreach (var t in tracks)
                             {
-                                Console.WriteLine($"{t.TrackId}\t{EllipseString(t.Name, 2, -1)}" +
+                                Console.WriteLine($"{t.TrackId}\t{EllipseString(t.Name, 3, -2)}" +
                                     $"{EllipseString(t.Composer, 4, -3)}\t{t.Milliseconds}");
                             }
                         }
@@ -478,14 +480,14 @@ namespace Labb3KamilNiescieronek
                 for (int i = min - 1; i < RecordCount + min - 1; i++)
                 {
                     Console.WriteLine($"{tracks[i].TrackId}\t{EllipseString(tracks[i].Name, 3, -2)}" +
-                        $"{EllipseString(tracks[i].Composer, 5, -3)}\t{tracks[i].Milliseconds}");
+                        $"{EllipseString(tracks[i].Composer, 4, -3)}\t\t{tracks[i].Milliseconds}");
                 }
             }
             else
             {
                 foreach (var t in tracks)
                 {
-                    Console.WriteLine($"{t.TrackId}\t{EllipseString(t.Name, 2, -1)}" +
+                    Console.WriteLine($"{t.TrackId}\t{EllipseString(t.Name, 3, -2)}" +
                         $"{EllipseString(t.Composer, 4, -3)}\t{t.Milliseconds}");
                 }
             }
@@ -1201,7 +1203,6 @@ namespace Labb3KamilNiescieronek
                             ReadJoinedTable(db, playlistId);
                         }
                         Console.WriteLine(new string('-', 100));
-                        Console.WriteLine("Loading. Please wait...");
                         var tracksj = db.Tracks
                             .Join(
                                 db.PlaylistTracks,
@@ -1222,16 +1223,15 @@ namespace Labb3KamilNiescieronek
                                 }
                             )
                             .Where(x => x.PlaylistId == playlistId).ToList();
-                        Console.WriteLine(new string('-', 100));
                         while (true)
                         {
-                            int trackId = 0;
+                            int trackIdloop = 0;
                             exist = true;
                             Console.Write("Select TrackId from playlist: ");
                             do
                             {
-                                trackId = IntTryParser(Console.ReadLine(), tracksj.Min(t => t.TrackId), tracksj.Max(t => t.TrackId)); ;
-                                exist = tracksj.Any(t => t.TrackId == trackId);
+                                trackIdloop = IntTryParser(Console.ReadLine(), tracksj.Min(t => t.TrackId), tracksj.Max(t => t.TrackId)); ;
+                                exist = tracksj.Any(t => t.TrackId == trackIdloop);
                                 if (!exist)
                                 {
                                     Console.ForegroundColor = ConsoleColor.Red;
@@ -1247,7 +1247,7 @@ namespace Labb3KamilNiescieronek
                             do
                             {
                                 newtrackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId)); ;
-                                exist = tracks.Any(t => t.TrackId == trackId);
+                                exist = tracks.Any(t => t.TrackId == trackIdloop);
                                 if (!exist)
                                 {
                                     Console.ForegroundColor = ConsoleColor.Red;
@@ -1259,7 +1259,7 @@ namespace Labb3KamilNiescieronek
                                     string updateQuary =
                                         $"UPDATE music.playlist_track " +
                                         $"SET TrackId = {newtrackId} " +
-                                        $"WHERE PlaylistId = {playlistId} AND TrackId = {trackId}";
+                                        $"WHERE PlaylistId = {playlistId} AND TrackId = {trackIdloop}";
                                     db.Database.ExecuteSqlRaw(updateQuary);
                                     Console.WriteLine(new string('-', 100));
                                     Console.ForegroundColor = ConsoleColor.Green;
@@ -1280,31 +1280,285 @@ namespace Labb3KamilNiescieronek
                                 break;
                             }
                         }
+                        ShowOptions(table);
                         break;
                     case "track":
                     case "tracks":
+                        tracks = db.Tracks.ToList();
+                        albums = db.Albums.ToList();
+                        var genres = db.Genres.ToList();
+                        var mediaTypes = db.MediaTypes.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display tracks table for additional help? (y/n): ");
+                        answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("tracks");
+                            Console.WriteLine(new string('-', 100));
+                        }
+                        int trackId = 0;
+                        exist = true;
+                        Console.Write("Select TrackId: ");
+                        do
+                        {
+                            trackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId)); ;
+                            exist = tracks.Any(t => t.TrackId == trackId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find TrackId. Input another TrackId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
 
+                        //Name
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing track name: {EllipseString(tracks.SingleOrDefault(t => t.TrackId == trackId).Name, 7, 0)}");
+                        Console.Write("Input new track name: ");
+                        newName = Console.ReadLine().TrimStart();
+                        if (newName == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to track name.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        var track = tracks.SingleOrDefault(t => t.TrackId == trackId);
+                        if (track != null)
+                        {
+                            track.Name = newName;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Track name successfully updated.");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"Something went wrong. Could not update track name.");
+                            Console.ResetColor();
+                        }
+
+                        //AlbumId
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing AlbumId: {tracks.SingleOrDefault(t => t.TrackId == trackId).AlbumId}");
+                        Console.Write("Input new AlbumId: ");
+                        string newAlbumIdStr = Console.ReadLine().TrimStart();
+                        if (newAlbumIdStr == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to AlbumId.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        int newAlbumId = IntTryParser(newAlbumIdStr, albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId));
+                        album = albums.SingleOrDefault(a => a.AlbumId == trackId);
+                        if (track != null)
+                        {
+                            track.AlbumId = newAlbumId;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"ArtistId successfully updated.");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"Something went wrong. Could not find new ArtistId.");
+                            Console.ResetColor();
+                        }
+
+                        //MediaTypeId
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing MediaTypeId: {tracks.SingleOrDefault(t => t.TrackId == trackId).MediaTypeId}");
+                        Console.Write("Input new MediaTypeId: ");
+                        string newMediaTypeIdStr = Console.ReadLine().TrimStart();
+                        if (newMediaTypeIdStr == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to MediaTypeId.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        int newMediaTypeId = IntTryParser(newMediaTypeIdStr, mediaTypes.Min(a => a.MediaTypeId), mediaTypes.Max(a => a.MediaTypeId));
+                        var mediaType = mediaTypes.SingleOrDefault(m => m.MediaTypeId == newMediaTypeId);
+                        if (mediaType != null)
+                        {
+                            track.MediaTypeId = newMediaTypeId;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"ArtistId successfully updated.");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"Something went wrong. Could not find new MediaTypeId.");
+                            Console.ResetColor();
+                        }
+
+                        //GenreId
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing GenreId: {tracks.SingleOrDefault(t => t.TrackId == trackId).GenreId}");
+                        Console.Write("Input new GenreId: ");
+                        string newGenreIdStr = Console.ReadLine().TrimStart();
+                        if (newGenreIdStr == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to GenreId.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        int newGenreId = IntTryParser(newGenreIdStr, genres.Min(g => g.GenreId), genres.Max(a => a.GenreId));
+                        var genre = genres.SingleOrDefault(g => g.GenreId == newGenreId);
+                        if (genre != null)
+                        {
+                            track.GenreId = newGenreId;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"ArtistId successfully updated.");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"Something went wrong. Could not find new MediaTypeId.");
+                            Console.ResetColor();
+                        }
+
+                        //Composer
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing composer: {EllipseString(tracks.SingleOrDefault(t => t.TrackId == trackId).Composer, 7, 0)}");
+                        Console.Write("Input new composer: ");
+                        string newComposer = Console.ReadLine().TrimStart();
+                        if (newComposer == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to composer name.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        if (track != null)
+                        {
+                            track.Composer = newComposer;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Composer successfully updated.");
+                            Console.ResetColor();
+                        }
+
+                        //Millseconds
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing track length in millseconds: {tracks.SingleOrDefault(t => t.TrackId == trackId).Milliseconds}");
+                        Console.Write("Input new track length in millseconds: ");
+                        string newMillsecondsStr = Console.ReadLine().TrimStart();
+                        if (newMillsecondsStr == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to track length.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        int newMillseconds = IntTryParser(newMillsecondsStr, 1, 9999999);
+                        if (track != null)
+                        {
+                            track.Milliseconds = newMillseconds;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Track length successfully updated.");
+                            Console.ResetColor();
+                        }
+
+                        //Bytes
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing track size in bytes: {tracks.SingleOrDefault(t => t.TrackId == trackId).Bytes}");
+                        Console.Write("Input new track size in bytes: ");
+                        string newBytesStr = Console.ReadLine().TrimStart();
+                        if (newBytesStr == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to track size.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        int newBytes = IntTryParser(newBytesStr, 1, 9999999);
+                        if (track != null)
+                        {
+                            track.Bytes = newBytes;
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Track length successfully updated.");
+                            Console.ResetColor();
+                        }
+
+                        //UnitPrice
+                        Console.WriteLine(new string('-', 100));
+                        Console.WriteLine("Press \"enter\" to cancel the prompt below\n");
+                        Console.WriteLine($"Existing unit price: {tracks.SingleOrDefault(t => t.TrackId == trackId).UnitPrice:0.00}");
+                        Console.Write("Input new unit price (between 1 and 99): ");
+                        string newUnitPriceStr = Console.ReadLine().TrimStart();
+                        if (newUnitPriceStr == string.Empty)
+                        {
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Prompt canceled. No changes made to unit price.");
+                            Console.ResetColor();
+                            ShowOptions(table);
+                            return;
+                        }
+                        int newUnitPrice = IntTryParser(newUnitPriceStr, 1, 99);
+                        if (track != null)
+                        {
+                            track.UnitPrice = Math.Round(((double)newUnitPrice / 100), 2);
+                            db.SaveChanges();
+                            Console.WriteLine(new string('-', 100));
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Unit price successfully updated to {track.UnitPrice:0.00}.");
+                            Console.ResetColor();
+                        }
+                        ShowOptions(table);
                         break;
                     default:
                         Console.WriteLine(new string('-', 100));
                         Console.WriteLine("Invalid input");
-                        ShowOptions();
+                        ShowOptions(table);
                         break;
                 }
             }
-            /*private static void UpdateCustomer()
-            {
-                using (var context = new ITHSDemoContext())
-                {
-                    var customer = context.Customers.First();
-                    customer.FirstName = "Michael";
-                    customer.LastName = "Jordan";
-
-                    context.SaveChanges();
-                }
-            }   */
         }
-
         private static void DeleteRow(string table)
         {
             /*private static void DeleteCustomer()
@@ -1324,10 +1578,153 @@ namespace Labb3KamilNiescieronek
                 {
                     case "album":
                     case "albums":
+                        var albums = db.Albums.ToList();
+                        var tracks = db.Tracks.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display albums table for additional help? (y/n): ");
+                        bool answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("album");
+                            Console.WriteLine(new string('-', 100));
+                        }
+                        int albumId = 0;
+                        bool exist = true;
+                        Console.Write("Delete row by selecting AlbumId: ");
+                        do
+                        {
+                            albumId = IntTryParser(Console.ReadLine(), albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId)); ;
+                            exist = albums.Any(a => a.AlbumId == albumId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find AlbumId. Input another AlbumId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
 
+                        var joinTable = db.Tracks
+                            .Join(
+                                db.PlaylistTracks,
+                                t => t.TrackId,
+                                pt => pt.TrackId,
+                                (t, pt) => new
+                                {
+                                    TrackId = t.TrackId,
+                                    Name = t.Name,
+                                    AlbumId = t.AlbumId,
+                                    MediaTypeId = t.MediaTypeId,
+                                    GenreId = t.GenreId,
+                                    Composer = t.Composer,
+                                    Milliseconds = t.Milliseconds,
+                                    Bytes = t.Bytes,
+                                    UnitPrice = t.UnitPrice,
+                                    PlaylistId = pt.PlaylistId
+                                }
+                            )
+                            .Where(x => x.AlbumId == albumId).ToList();
+
+                        Console.WriteLine(new string('-', 100));
+                        if (tracks.Any(a => a.AlbumId == albumId) && joinTable.Any(j => j.AlbumId == albumId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"AlbumId {albumId} is referenced in the track and playlist_track tables.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Delete the album and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery = 
+                                    $"DELETE music.playlist_track " +
+                                    $"WHERE TrackId = " +
+                                    $"(SELECT DISTINCT pt.TrackId " +
+                                    $"FROM music.tracks t " +
+                                    $"  JOIN music.playlist_track pt " +
+                                    $"      ON pt.TrackId = t.TrackId " +
+                                    $"WHERE AlbumId = {albumId}) " +
+                                    $"" +
+                                    $"DELETE music.tracks " +
+                                    $"WHERE AlbumId = {albumId} " +
+                                    $"" +
+                                    $"DELETE music.albums " +
+                                    $"WHERE AlbumId = {albumId}";
+
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"AlbumId {albumId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else if (tracks.Any(a => a.AlbumId == albumId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"AlbumId {albumId} is referenced in the track table.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Delete the album and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery =
+                                    $"DELETE music.tracks " +
+                                    $"WHERE AlbumId = {albumId} " +
+                                    $"" +
+                                    $"DELETE music.albums " +
+                                    $"WHERE AlbumId = {albumId}";
+
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"AlbumId {albumId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else
+                        {
+                            string deleteQuery =
+                                $"DELETE music.albums " +
+                                $"WHERE AlbumId = {albumId}";
+
+                            db.Database.ExecuteSqlRaw(deleteQuery);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"AlbumId {albumId} deleted.");
+                            Console.ResetColor();
+                        }
+                        ShowOptions(table);
                         break;
                     case "artist":
                     case "artists":
+                        var artists = db.Artists.ToList();
+                        albums = db.Albums.ToList();
+                        tracks = db.Tracks.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display artists table for additional help? (y/n): ");
+                        answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("artists");
+                            Console.WriteLine(new string('-', 100));
+                        }
+
+
 
                         break;
                     case "playlist":
@@ -1345,7 +1742,7 @@ namespace Labb3KamilNiescieronek
                     default:
                         Console.WriteLine(new string('-', 100));
                         Console.WriteLine("Invalid input");
-                        ShowOptions();
+                        ShowOptions(table);
                         break;
                 }
             }
@@ -1376,7 +1773,9 @@ namespace Labb3KamilNiescieronek
                 }
                 else
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write("Invalid input. Please type \"yes\" or \"no\": ");
+                    Console.ResetColor();
                 }
             }
         }
@@ -1462,7 +1861,7 @@ namespace Labb3KamilNiescieronek
                     default:
                         Console.WriteLine(new string('-', 100));
                         Console.WriteLine("Invalid input");
-                        ShowOptions();
+                        ShowOptions(table);
                         break;
                 }
             }
@@ -1508,7 +1907,7 @@ namespace Labb3KamilNiescieronek
             Console.WriteLine(new string('-', 100));
             Console.WriteLine("-tables \t\tDisplays the available table names in the DB.");
             Console.WriteLine("-select <table name> \tSelect whatever table that you wish to work towards.");
-            Console.WriteLine("-add \t\t\tAdd records to whatever table is loaded or specified in the header.");
+            Console.WriteLine("-add \t\t\tAdd rows to whatever table that is specified in the header.");
             Console.WriteLine("-update \t\tUpdate the specified row/record.");
             Console.WriteLine("-delete \t\tDelete the entire row specified.");
             Console.WriteLine("-options \t\tPrints the options prompt on the screen.");
