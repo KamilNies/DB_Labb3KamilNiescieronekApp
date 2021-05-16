@@ -12,15 +12,6 @@ namespace Labb3KamilNiescieronek
     {
         static void Main(string[] args)
         {
-            //Note to self change Record mentions to rows, makes it clearer
-            #region Test space
-            //string testing = "artists";
-            //InsertRow(testing);
-            //Console.ReadKey();
-            string testing = "playlist_track";
-            DeleteRow(testing);
-            Console.ReadKey();
-            #endregion Test space
             #region Check DB
             //Check connection. Create DB if connection does not exist
             Console.WriteLine("Checking connection. Please wait...");
@@ -2028,12 +2019,79 @@ namespace Labb3KamilNiescieronek
                         break;
                     case "track":
                     case "tracks":
+                        tracks = db.Tracks.ToList();
+                        playlistTrack = db.PlaylistTracks.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display tracks table for additional help? (y/n): ");
+                        answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("tracks");
+                            Console.WriteLine(new string('-', 100));
+                        }
+                        trackId = 0;
+                        exist = true;
+                        Console.Write("Delete row by selecting TrackId: ");
+                        do
+                        {
+                            trackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId));
+                            exist = tracks.Any(t => t.TrackId == trackId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find TrackId. Input another TrackId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
 
+                        Console.WriteLine(new string('-', 100));
+                        if (playlistTrack.Any(pt => pt.TrackId == trackId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"TrackId {trackId} is referenced in the playlist_track table.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Delete the track and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery = 
+                                    $"DELETE music.playlist_track " +
+                                    $"WHERE TrackId = 110 " +
+                                    $"" +
+                                    $"DELETE music.tracks " +
+                                    $"WHERE TrackId = 110";
 
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"TrackId {trackId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else
+                        {
+                            string deleteQuery =
+                                    $"DELETE music.playlist_track " +
+                                    $"WHERE TrackId = 110 " +
+                                    $"" +
+                                    $"DELETE music.tracks " +
+                                    $"WHERE TrackId = 110";
 
-
-
-
+                            db.Database.ExecuteSqlRaw(deleteQuery);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"TrackId {trackId} and its references deleted.");
+                            Console.ResetColor();
+                        }
+                        ShowOptions(table);
                         break;
                     default:
                         Console.WriteLine(new string('-', 100));
@@ -2154,7 +2212,7 @@ namespace Labb3KamilNiescieronek
         }
         private static string EllipseString(string input, int tabMultiplier, int offset)
         {
-            //One \t corresponds to 9 characters worth of 'spaces' in the console 
+            //One \t corresponds to a maximum of 9 characters worth of 'spaces' on the console 
             int maxStringLength = tabMultiplier * 9;
             if (input != null)
             {
