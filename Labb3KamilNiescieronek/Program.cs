@@ -14,10 +14,10 @@ namespace Labb3KamilNiescieronek
         {
             //Note to self change Record mentions to rows, makes it clearer
             #region Test space
-            //string testing = "albums";
+            //string testing = "artists";
             //InsertRow(testing);
             //Console.ReadKey();
-            string testing = "albums";
+            string testing = "playlist_track";
             DeleteRow(testing);
             Console.ReadKey();
             #endregion Test space
@@ -250,7 +250,7 @@ namespace Labb3KamilNiescieronek
                         {
                             for (int i = min - 1; i < RecordCount + min - 1; i++)
                             {
-                                Console.WriteLine($"{artists[i].ArtistId}\t\t{EllipseString(artists[i].Name, 9, 0)}"); ;
+                                Console.WriteLine($"{artists[i].ArtistId}\t\t{EllipseString(artists[i].Name, 9, 0)}");
                             }
                         }
                         else
@@ -1003,7 +1003,7 @@ namespace Labb3KamilNiescieronek
                         Console.Write("Input AlbumId: ");
                         do
                         {
-                            albumId = IntTryParser(Console.ReadLine(), albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId)); ;
+                            albumId = IntTryParser(Console.ReadLine(), albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId));
                             exist = albums.Any(a => a.AlbumId == albumId);
                             if (!exist)
                             {
@@ -1185,7 +1185,7 @@ namespace Labb3KamilNiescieronek
                         Console.Write("Select PlaylistId: ");
                         do
                         {
-                            playlistId = IntTryParser(Console.ReadLine(), playlists.Min(p => p.PlaylistId), playlists.Max(a => a.PlaylistId)); ;
+                            playlistId = IntTryParser(Console.ReadLine(), playlists.Min(p => p.PlaylistId), playlists.Max(a => a.PlaylistId));
                             exist = playlists.Any(p => p.PlaylistId == playlistId);
                             if (!exist)
                             {
@@ -1230,7 +1230,7 @@ namespace Labb3KamilNiescieronek
                             Console.Write("Select TrackId from playlist: ");
                             do
                             {
-                                trackIdloop = IntTryParser(Console.ReadLine(), tracksj.Min(t => t.TrackId), tracksj.Max(t => t.TrackId)); ;
+                                trackIdloop = IntTryParser(Console.ReadLine(), tracksj.Min(t => t.TrackId), tracksj.Max(t => t.TrackId));
                                 exist = tracksj.Any(t => t.TrackId == trackIdloop);
                                 if (!exist)
                                 {
@@ -1246,7 +1246,7 @@ namespace Labb3KamilNiescieronek
                             exist = true;
                             do
                             {
-                                newtrackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId)); ;
+                                newtrackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId));
                                 exist = tracks.Any(t => t.TrackId == trackIdloop);
                                 if (!exist)
                                 {
@@ -1302,7 +1302,7 @@ namespace Labb3KamilNiescieronek
                         Console.Write("Select TrackId: ");
                         do
                         {
-                            trackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId)); ;
+                            trackId = IntTryParser(Console.ReadLine(), tracks.Min(t => t.TrackId), tracks.Max(t => t.TrackId));
                             exist = tracks.Any(t => t.TrackId == trackId);
                             if (!exist)
                             {
@@ -1561,16 +1561,6 @@ namespace Labb3KamilNiescieronek
         }
         private static void DeleteRow(string table)
         {
-            /*private static void DeleteCustomer()
-             {
-                using (var context = new ITHSDemoContext())
-                {
-                    var customer = context.Customers.First();
-                    context.Customers.Remove(customer);
-            
-                    context.SaveChanges();
-                }
-            }*/
             Console.WriteLine("Loading. Please wait...");
             using (var db = new Labb3KamilNiescieronekContext())
             {
@@ -1594,7 +1584,7 @@ namespace Labb3KamilNiescieronek
                         Console.Write("Delete row by selecting AlbumId: ");
                         do
                         {
-                            albumId = IntTryParser(Console.ReadLine(), albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId)); ;
+                            albumId = IntTryParser(Console.ReadLine(), albums.Min(a => a.AlbumId), albums.Max(a => a.AlbumId));
                             exist = albums.Any(a => a.AlbumId == albumId);
                             if (!exist)
                             {
@@ -1639,7 +1629,7 @@ namespace Labb3KamilNiescieronek
                                 Console.WriteLine(new string('-', 100));
                                 string deleteQuery = 
                                     $"DELETE music.playlist_track " +
-                                    $"WHERE TrackId = " +
+                                    $"WHERE TrackId IN " +
                                     $"(SELECT DISTINCT pt.TrackId " +
                                     $"FROM music.tracks t " +
                                     $"  JOIN music.playlist_track pt " +
@@ -1723,20 +1713,326 @@ namespace Labb3KamilNiescieronek
                             ReadTable("artists");
                             Console.WriteLine(new string('-', 100));
                         }
+                        int artistId = 0;
+                        exist = true;
+                        Console.Write("Delete row by selecting ArtistId: ");
+                        do
+                        {
+                            artistId = IntTryParser(Console.ReadLine(), artists.Min(a => a.ArtistId), artists.Max(a => a.ArtistId));
+                            exist = artists.Any(a => a.ArtistId == artistId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find ArtistId. Input another ArtistId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
 
+                        var albumTrack = db.Albums
+                            .Join(
+                                db.Tracks,
+                                a => a.AlbumId,
+                                t => t.AlbumId,
+                                (a, t) => new
+                                {
+                                    AlbumId = a.AlbumId,
+                                    ArtistId = a.ArtistId,
+                                    TrackId = t.TrackId
+                                }
+                            ).Where(x => x.ArtistId == artistId).ToList();
 
+                        var albumTrackPlaylist = db.Albums
+                            .Join(
+                                db.Tracks,
+                                a => a.AlbumId,
+                                t => t.TrackId,
+                                (a, t) => new
+                                {
+                                    AlbumId = t.AlbumId,
+                                    ArtistId = a.ArtistId,
+                                    TrackId = t.TrackId
+                                }
+                            )
+                            .Join(
+                                db.PlaylistTracks,
+                                a => a.AlbumId,
+                                pt => pt.PlaylistId,
+                                (a, pt) => new
+                                {
+                                    AlbumId = a.AlbumId,
+                                    ArtistId = a.ArtistId,
+                                    TrackId = pt.TrackId,
+                                    PlaylistId = pt.PlaylistId
+                                }
+                            ).Where(x => x.ArtistId == artistId).ToList();
 
+                        Console.WriteLine(new string('-', 100));
+                        if (albums.Any(a => a.ArtistId == artistId) && albumTrackPlaylist.Any(atp => atp.ArtistId == artistId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"ArtistId {artistId} is referenced in the albums, tracks and playlist_track tables.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Remove the artist and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery =
+                                    $"DELETE music.playlist_track " +
+                                    $"WHERE TrackId IN " +
+                                    $"(SELECT DISTINCT pt.TrackId " +
+                                    $"FROM music.playlist_track pt " +
+                                    $"  JOIN " +
+                                    $"(SELECT t.TrackId, al.ArtistId " +
+                                    $"FROM music.albums al " +
+                                    $"  JOIN music.tracks t " +
+                                    $"    ON t.AlbumId = al.AlbumId " +
+                                    $"WHERE al.ArtistId = {artistId}) alt " +
+                                    $"  ON pt.TrackId = alt.TrackId) " +
+                                    $"" +
+                                    $"DELETE music.tracks " +
+                                    $"WHERE TrackId IN " +
+                                    $"(SELECT t.TrackId " +
+                                    $"FROM music.albums al " +
+                                    $"  JOIN music.tracks t " +
+                                    $"    ON t.AlbumId = al.AlbumId " +
+                                    $"WHERE al.ArtistId = {artistId}) " +
+                                    $"" +
+                                    $"DELETE music.albums " +
+                                    $"WHERE ArtistId = {artistId} " +
+                                    $"" +
+                                    $"DELETE music.artists " +
+                                    $"WHERE ArtistId = {artistId}";
+
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"ArtistId {artistId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else if (albums.Any(a => a.ArtistId == artistId) && albumTrack.Any(at => at.ArtistId == artistId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"ArtistId {artistId} is referenced in the albums and tracks table.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Remove the artist and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery =
+                                    $"DELETE music.tracks " +
+                                    $"WHERE TrackId IN " +
+                                    $"(SELECT t.TrackId " +
+                                    $"FROM music.albums al " +
+                                    $"  JOIN music.tracks t " +
+                                    $"    ON t.AlbumId = al.AlbumId " +
+                                    $"WHERE al.ArtistId = {artistId}) " +
+                                    $"" +
+                                    $"DELETE music.albums " +
+                                    $"WHERE ArtistId = {artistId} " +
+                                    $"" +
+                                    $"DELETE music.artists " +
+                                    $"WHERE ArtistId = {artistId}";
+
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"ArtistId {artistId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else if (albums.Any(a => a.ArtistId == artistId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"ArtistId {artistId} is referenced in the albums table.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Remove the artist and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery =
+                                $"DELETE music.albums " +
+                                $"WHERE ArtistId = {artistId} " +
+                                $"" +
+                                $"DELETE music.artists " +
+                                $"WHERE ArtistId = {artistId}";
+
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"ArtistId {artistId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else
+                        {
+                            string deleteQuery =
+                            $"DELETE music.artists " +
+                            $"WHERE ArtistId = {artistId}";
+
+                            db.Database.ExecuteSqlRaw(deleteQuery);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"ArtistId {artistId} and its references deleted.");
+                            Console.ResetColor();
+                        }
+                        ShowOptions(table);
                         break;
                     case "playlist":
                     case "playlists":
+                        var playlists = db.Playlists.ToList();
+                        var playlistTracks = db.PlaylistTracks.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display playlist table for additional help? (y/n): ");
+                        answer = YesNoPrompt();
+                        Console.WriteLine(new string('-', 100));
+                        if (answer)
+                        {
+                            ReadTable("playlist");
+                            Console.WriteLine(new string('-', 100));
+                        }
+                        int playlistId = 0;
+                        exist = true;
+                        Console.Write("Delete row by selecting PlaylistId: ");
+                        do
+                        {
+                            playlistId = IntTryParser(Console.ReadLine(), playlists.Min(p => p.PlaylistId), playlists.Max(p => p.PlaylistId));
+                            exist = playlists.Any(a => a.PlaylistId == playlistId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find PlaylistId. Input another PlaylistId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
+                        Console.WriteLine(new string('-', 100));
+                        if (playlistTracks.Any(pt => pt.PlaylistId == playlistId))
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"PlaylistId {playlistId} is referenced in the playlist_track table.");
+                            Console.ResetColor();
+                            Console.WriteLine(new string('-', 100));
+                            Console.Write("Delete the playlist and its associated references? (y/n): ");
+                            answer = YesNoPrompt();
+                            if (answer)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                string deleteQuery =
+                                    $"/*DELETE music.playlist_track " +
+                                    $"WHERE PlaylistId = {playlistId} " +
+                                    $"" +
+                                    $"DELETE music.playlists " +
+                                    $"WHERE PlaylistId = {playlistId}";
 
+                                db.Database.ExecuteSqlRaw(deleteQuery);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"PlaylistId {playlistId} and its references deleted.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"Breaking operation. No changes were committed.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else
+                        {
+                            string deleteQuery =
+                                $"DELETE music.playlists " +
+                                $"WHERE PlaylistId = {playlistId}";
+
+                            db.Database.ExecuteSqlRaw(deleteQuery);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"PlaylistId {playlistId} deleted.");
+                            Console.ResetColor();
+                        }
+                        ShowOptions(table);
                         break;
                     case "playlist_track":
                     case "playlist_tracks":
+                        var playlistTrack = db.PlaylistTracks.ToList();
+                        Console.WriteLine(new string('-', 100));
+                        Console.Write("Display playlist_track table for additional help? (y/n): ");
+                        answer = YesNoPrompt();
+                        if (answer)
+                        {
+                            ReadTable("playlist_track");
+                            Console.WriteLine(new string('-', 100));
+                        }
+                        playlistId = 0;
+                        exist = true;
+                        Console.WriteLine("Delete row by selecting PlaylistId and TrackId: ");
+                        Console.Write("Select AlbumId: ");
+                        do
+                        {
+                            playlistId = IntTryParser(Console.ReadLine(), playlistTrack.Min(pt => pt.PlaylistId),
+                                playlistTrack.Max(pt => pt.PlaylistId));
+                            exist = playlistTrack.Any(pt => pt.PlaylistId == playlistId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write("Cannot find PlaylistId. Input another PlaylistId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
+                        int trackId = 0;
+                        exist = true;
+                        Console.Write("Select TrackId: ");
+                        do
+                        {
+                            trackId = IntTryParser(Console.ReadLine(), playlistTrack.Min(pt => pt.TrackId),
+                                playlistTrack.Max(pt => pt.TrackId));
+                            exist = playlistTrack.Any(pt => pt.TrackId == trackId && pt.PlaylistId == playlistId);
+                            if (!exist)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write($"Cannot find TrackId with PlaylistId {playlistId}. Input another TrackId: ");
+                                Console.ResetColor();
+                            }
+                        } while (!exist);
+                        Console.WriteLine(new string('-', 100));
+                        string deleteQueryPt = 
+                            $"DELETE music.playlist_track " +
+                            $"WHERE PlaylistId = {playlistId} AND TrackId = {trackId}";
 
+                        db.Database.ExecuteSqlRaw(deleteQueryPt);
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"PlaylistId {playlistId} and TrackId {trackId} deleted from playlist_track table");
+                        Console.ResetColor();
+                        ShowOptions(table);
                         break;
                     case "track":
                     case "tracks":
+
+
+
+
+
 
                         break;
                     default:
@@ -1746,16 +2042,6 @@ namespace Labb3KamilNiescieronek
                         break;
                 }
             }
-            /*private static void DeleteCustomer()
-             {
-                using (var context = new ITHSDemoContext())
-                {
-                    var customer = context.Customers.First();
-                    context.Customers.Remove(customer);
-
-                    context.SaveChanges();
-                }
-            }*/
         }
         private static bool YesNoPrompt()
         {
