@@ -29,7 +29,7 @@ namespace Labb3KamilNiescieronek
                     }
                     catch (Exception e)
                     {
-                        throw new Exception("Something went wrong: ", e); //Dont forget to catch exception later on
+                        throw new Exception("Something went wrong: ", e);
                     }
 
                     Console.WriteLine(new string('-', 100));
@@ -45,60 +45,90 @@ namespace Labb3KamilNiescieronek
             }
             #endregion Check DB
             #region Main
-            //Create new try catch in Main
             ShowOptions();
             bool flag = true;
             while (flag)
             {
-                string[] parameters = Console.ReadLine()
-                    .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
-                parameters = Array.ConvertAll(parameters, x => x.ToLower());
-                switch (parameters[0])
+                try
                 {
-                    case "-table":
-                    case "-tables":
-                        DisplayTableNames();
-                        break;
-                    case "-select":
-                        if (parameters.Length > 1)
-                        {
+                    string[] parameters = Console.ReadLine()
+                    .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
+                    parameters = Array.ConvertAll(parameters, x => x.ToLower());
+                    switch (parameters[0])
+                    {
+                        case "-table":
+                        case "-tables":
+                            DisplayTableNames();
+                            break;
+                        case "-select":
+                            if (parameters.Length > 1)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                ReadTable(parameters[1]);
+                                ShowOptions(parameters[1]);
+                                TableOptionsPrompt(parameters[1]);
+                                return;
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.Write("Input the table name that you wish to display: ");
+                                string tableName = Console.ReadLine()
+                                    .Trim(new char[] { ' ', '-', '.', ',', ';', '<', '>' }).ToLower();
+                                Console.WriteLine(new string('-', 100));
+                                ReadTable(tableName);
+                                ShowOptions(tableName);
+                                TableOptionsPrompt(tableName);
+                                return;
+                            }
+                        case "-option":
+                        case "-options":
+                            ShowOptions();
+                            break;
+                        case "-clear":
+                            Console.Clear();
+                            ShowOptions();
+                            break;
+                        case "-help":
+                            ShowHelp();
+                            break;
+                        case "-exit":
+                            flag = false;
+                            break;
+                        default:
                             Console.WriteLine(new string('-', 100));
-                            ReadTable(parameters[1]);
-                            ShowOptions(parameters[1]);
-                            TableOptionsPrompt(parameters[1]);
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine(new string('-', 100));
-                            Console.Write("Input the table name that you wish to display: ");
-                            string tableName = Console.ReadLine()
-                                .Trim(new char[] { ' ', '-', '.', ',', ';', '<', '>' }).ToLower();
-                            Console.WriteLine(new string('-', 100));
-                            ReadTable(tableName);
-                            ShowOptions(tableName);
-                            TableOptionsPrompt(tableName);
-                            return;
-                        }
-                    case "-option":
-                    case "-options":
-                        ShowOptions();
-                        break;
-                    case "-clear":
-                        Console.Clear();
-                        ShowOptions();
-                        break;
-                    case "-help":
-                        ShowHelp();
-                        break;
-                    case "-exit":
-                        flag = false;
-                        break;
-                    default:
-                        Console.WriteLine(new string('-', 100));
-                        Console.WriteLine("Invalid input");
-                        ShowOptions();
-                        break;
+                            Console.WriteLine("Invalid input");
+                            ShowOptions();
+                            break;
+                    }
+                }
+                catch (ArgumentNullException ane)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ane.Message);
+                    Console.ResetColor();
+                    ShowOptions();
+                }
+                catch (ArgumentException ae)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ae.Message);
+                    Console.ResetColor();
+                    ShowOptions();
+                }
+                catch (IndexOutOfRangeException ioore)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ioore.Message);
+                    Console.ResetColor();
+                    ShowOptions();
+                }
+                catch (Exception e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    ShowOptions();
                 }
             }
             #endregion Main
@@ -2146,67 +2176,98 @@ namespace Labb3KamilNiescieronek
             bool flag = true;
             while (flag)
             {
-                string[] parameters = Console.ReadLine()
-                                    .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
-                parameters = Array.ConvertAll(parameters, x => x.ToLower());
-                switch (parameters[0])
+                try
                 {
-                    case "-table":
-                    case "-tables":
-                        DisplayTableNames();
-                        break;
-                    case "-select":
-                        if (parameters.Length > 1)
-                        {
+                    string[] parameters = Console.ReadLine()
+                                    .Split(new char[] { ' ', '.', ',', ';', '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
+                    parameters = Array.ConvertAll(parameters, x => x.ToLower());
+                    switch (parameters[0])
+                    {
+                        case "-table":
+                        case "-tables":
+                            DisplayTableNames();
+                            break;
+                        case "-select":
+                            if (parameters.Length > 1)
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                ReadTable(parameters[1]);
+                                ShowOptions(parameters[1]);
+                                TableOptionsPrompt(parameters[1]);
+                                return;
+                            }
+                            else
+                            {
+                                Console.WriteLine(new string('-', 100));
+                                Console.Write("Input the table name that you wish to display: ");
+                                string tableName = Console.ReadLine()
+                                    .Trim(new char[] { ' ', '-', '.', ',', ';', '<', '>' }).ToLower();
+                                Console.WriteLine(new string('-', 100));
+                                ReadTable(tableName);
+                                ShowOptions(tableName);
+                                TableOptionsPrompt(tableName);
+                                return;
+                            }
+                        case "-add":
                             Console.WriteLine(new string('-', 100));
-                            ReadTable(parameters[1]);
-                            ShowOptions(parameters[1]);
-                            TableOptionsPrompt(parameters[1]);
-                            return;
-                        }
-                        else
-                        {
+                            InsertRow(table);
+                            break;
+                        case "-update":
                             Console.WriteLine(new string('-', 100));
-                            Console.Write("Input the table name that you wish to display: ");
-                            string tableName = Console.ReadLine()
-                                .Trim(new char[] { ' ', '-', '.', ',', ';', '<', '>' }).ToLower();
+                            UpdateRow(table);
+                            break;
+                        case "-delete":
                             Console.WriteLine(new string('-', 100));
-                            ReadTable(tableName);
-                            ShowOptions(tableName);
-                            TableOptionsPrompt(tableName);
-                            return;
-                        }
-                    case "-add":
-                        Console.WriteLine(new string('-', 100));
-                        InsertRow(table);
-                        break;
-                    case "-update":
-                        Console.WriteLine(new string('-', 100));
-                        UpdateRow(table);
-                        break;
-                    case "-delete":
-                        Console.WriteLine(new string('-', 100));
-                        DeleteRow(table);
-                        break;
-                    case "-option":
-                    case "-options":
-                        ShowOptions(table);
-                        break;
-                    case "-clear":
-                        Console.Clear();
-                        ShowOptions(table);
-                        break;
-                    case "-help":
-                        ShowHelp(table);
-                        break;
-                    case "-exit":
-                        flag = false;
-                        break;
-                    default:
-                        Console.WriteLine(new string('-', 100));
-                        Console.WriteLine("Invalid input");
-                        ShowOptions(table);
-                        break;
+                            DeleteRow(table);
+                            break;
+                        case "-option":
+                        case "-options":
+                            ShowOptions(table);
+                            break;
+                        case "-clear":
+                            Console.Clear();
+                            ShowOptions(table);
+                            break;
+                        case "-help":
+                            ShowHelp(table);
+                            break;
+                        case "-exit":
+                            flag = false;
+                            break;
+                        default:
+                            Console.WriteLine(new string('-', 100));
+                            Console.WriteLine("Invalid input");
+                            ShowOptions(table);
+                            break;
+                    }
+                }
+                catch (ArgumentNullException ane)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ane.Message);
+                    Console.ResetColor();
+                    ShowOptions(table);
+                }
+                catch (ArgumentException ae)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ae.Message);
+                    Console.ResetColor();
+                    ShowOptions(table);
+                }
+                catch (IndexOutOfRangeException ioore)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ioore.Message);
+                    Console.ResetColor();
+                    ShowOptions(table);
+                }
+                catch (Exception e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    ShowOptions(table);
                 }
             }
         }
