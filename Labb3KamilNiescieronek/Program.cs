@@ -2090,10 +2090,10 @@ namespace Labb3KamilNiescieronek
                                 Console.WriteLine(new string('-', 100));
                                 string deleteQuery = 
                                     $"DELETE music.playlist_track " +
-                                    $"WHERE TrackId = 110 " +
+                                    $"WHERE TrackId = {trackId} " +
                                     $"" +
                                     $"DELETE music.tracks " +
-                                    $"WHERE TrackId = 110";
+                                    $"WHERE TrackId = {trackId}";
 
                                 db.Database.ExecuteSqlRaw(deleteQuery);
                                 Console.ForegroundColor = ConsoleColor.Green;
@@ -2112,10 +2112,10 @@ namespace Labb3KamilNiescieronek
                         {
                             string deleteQuery =
                                     $"DELETE music.playlist_track " +
-                                    $"WHERE TrackId = 110 " +
+                                    $"WHERE TrackId = {trackId} " +
                                     $"" +
                                     $"DELETE music.tracks " +
-                                    $"WHERE TrackId = 110";
+                                    $"WHERE TrackId = {trackId}";
 
                             db.Database.ExecuteSqlRaw(deleteQuery);
                             Console.ForegroundColor = ConsoleColor.Green;
