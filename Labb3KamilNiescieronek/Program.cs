@@ -1390,14 +1390,14 @@ namespace Labb3KamilNiescieronek
                             db.SaveChanges();
                             Console.WriteLine(new string('-', 100));
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"ArtistId successfully updated.");
+                            Console.WriteLine($"AlbumId successfully updated.");
                             Console.ResetColor();
                         }
                         else
                         {
                             Console.WriteLine(new string('-', 100));
                             Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine($"Something went wrong. Could not find new ArtistId.");
+                            Console.WriteLine($"Something went wrong. Could not find new AlbumId.");
                             Console.ResetColor();
                         }
 
@@ -1424,7 +1424,7 @@ namespace Labb3KamilNiescieronek
                             db.SaveChanges();
                             Console.WriteLine(new string('-', 100));
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"ArtistId successfully updated.");
+                            Console.WriteLine($"MediaTypeId successfully updated.");
                             Console.ResetColor();
                         }
                         else
@@ -1458,14 +1458,14 @@ namespace Labb3KamilNiescieronek
                             db.SaveChanges();
                             Console.WriteLine(new string('-', 100));
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"ArtistId successfully updated.");
+                            Console.WriteLine($"GenreId successfully updated.");
                             Console.ResetColor();
                         }
                         else
                         {
                             Console.WriteLine(new string('-', 100));
                             Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine($"Something went wrong. Could not find new MediaTypeId.");
+                            Console.WriteLine($"Something went wrong. Could not find new GenreId.");
                             Console.ResetColor();
                         }
 
